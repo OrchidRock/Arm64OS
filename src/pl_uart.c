@@ -71,3 +71,21 @@ void uart_send_string(const char* str)
         uart_send((char)str[i]);
     }
 }
+
+int uart_recv_string(char* buf, int len)
+{
+    int index = 0;
+    char c;
+    while (index < len) {
+        c = uart_recv();
+        buf[index++] = c;
+        if (c == '\r' || c == '\n') {
+            break;
+        }
+    }
+    if (index == len) {
+        index -= 1;
+    }
+    buf[index] = '\0';
+    return index;
+}
