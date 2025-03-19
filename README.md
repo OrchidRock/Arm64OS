@@ -14,3 +14,9 @@
 $ make
 ```
 
+## qemu 仿真
+```shell
+$ make qemu
+Hello World from Arm64OS!
+> 
+```

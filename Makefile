@@ -33,3 +33,6 @@ arm64os.bin: $(SRC_DIR)/linker.ld $(OBJ_FILES)
 
 clean :
 		rm -rf $(BUILD_DIR) *.bin *.map
+
+qemu:
+		qemu-system-aarch64 -M raspi4b2g -nographic -kernel arm64os.bin
