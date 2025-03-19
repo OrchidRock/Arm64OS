@@ -1,7 +1,3 @@
-//
-// Created by mimose on 25-3-19.
-//
-
 #ifndef MM_H
 #define MM_H
 
