@@ -16,7 +16,7 @@ core0_proc:
         sub x1, x1, x0
         bl memzero
 
-        mov sp, #LOW_MEMORY
+        #mov sp, #0x8000000
         bl start_kernel
         b hang_proc
 
