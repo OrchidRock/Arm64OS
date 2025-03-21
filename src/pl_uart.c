@@ -4,6 +4,7 @@
 
 void uart_init(void)
 {
+#ifndef RPI5_BCM2712
     unsigned int selector;
 
     /* clean gpio4 */
@@ -22,9 +23,12 @@ void uart_init(void)
     writel((1<<14) | (1<<15), GPPUDCLK0);
     delay(150);
     writel(0, GPPUDCLK0);
+#endif
 
     /* disable UART until configuration is done */
     writel(0, UART_CR_REG);
+
+    writel(0x7FF, UART_ICR_REG);
 
     /*
      * baud divisor = UARTCLK / (16 * baud_rate)
