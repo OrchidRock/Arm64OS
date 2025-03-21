@@ -6,7 +6,9 @@ board ?= rpi4b
 ## Toolchain
 CC_PREFIX := aarch64-linux-gnu
 
-CFLAGS += -g -Wall -nostdlib -nostdinc
+
+## set option 'mgeneral-regs-only' to suggent vargs.
+CFLAGS += -g -Wall -mgeneral-regs-only  -nostdlib #-nostdinc
 CFLAGS += -ffunction-sections -fdata-sections
 LDFLAGS	+= --gc-sections
 
@@ -20,7 +22,7 @@ endif
 ARCH += -DAARCH=64 -mcpu=cortex-a76 -mlittle-endian
 INCLUDE +=  -I $(HOME_ROOT_DIR)/include
 
-ASMFLAGS += $(ARCH) $(DEFINE) $(INCLUDE) $(OPTIMIZE)
+ASMFLAGS += -g $(ARCH) $(DEFINE) $(INCLUDE) $(OPTIMIZE)
 CFLAGS += $(ARCH) $(DEFINE) $(INCLUDE) $(OPTIMIZE)
 
 LDFLAGS	+= --section-start=.init=$(LOADADDR)
@@ -59,3 +61,4 @@ clean :
 
 qemu:
 		./qemu-system-aarch64 -M raspi4b2g -nographic -kernel arm64os.bin
+

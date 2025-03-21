@@ -18,5 +18,6 @@ $ make
 ```shell
 $ make qemu
 Hello World from Arm64OS!
+printk init done.
 > 
 ```

@@ -93,3 +93,10 @@ int uart_recv_string(char* buf, int len)
     buf[index] = '\0';
     return index;
 }
+
+void putchar(char c)
+{
+    if (c == '\n')
+        uart_send('\r');
+    uart_send(c);    
+}
