@@ -41,6 +41,11 @@ el2_entry:
 
 el1_entry:
 	mrs x5, CurrentEL
+
+        /* set vbar reg */
+        ldr x5, =vectors
+        msr vbar_el1, x5
+
         adr x0, bss_begin
         adr x1, bss_end
         sub x1, x1, x0
