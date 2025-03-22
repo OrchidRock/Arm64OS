@@ -1,4 +1,4 @@
-
+#include "asm/pgtable_types.h"
 #include "uart.h"
 #include "irq.h"
 #include "timer.h"
@@ -210,10 +210,14 @@ void start_kernel(void)
     printk("done\n");
 
     paging_init();
+
+    dump_pgtable();
+    test_walk_pgtable();
 	test_mmu();
 
 	gic_init(0, GIC_V2_DISTRIBUTOR_BASE, GIC_V2_CPU_INTERFACE_BASE);
-    //timer_init();
+    timer_init();
+    //system_timer_init();
     raw_local_irq_enable();
 
     char buffer[64] = {0};

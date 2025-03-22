@@ -1,14 +1,19 @@
 SECTIONS
 {
-        . = 0x80000;
+	. = 0x80000;
 	.text : {
-                _text_boot_start = .;
+        _text_boot_start = .;
 		KEEP(*(.text.boot))
-                _text_boot_end = .;
+        _text_boot_end = .;
 
-                _text_start = .;
+        _text_start = .;
 		*(.text .text.* .gnu.linkonce.t*)
-                _text_end = .;
+
+		. = ALIGN(4096);
+		readonly_page = .;
+		. += 4096;
+
+        _text_end = .;
 	}
         
         _rodata_start = .;

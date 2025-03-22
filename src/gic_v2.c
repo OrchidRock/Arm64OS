@@ -86,6 +86,11 @@ static void gic_set_irq(int irq, unsigned int offset)
     writel(mask, gic_get_dist_base() + offset + (irq / 32) * 4);
 }
 
+static inline void gicv2_eoi_irq(int irq)
+{
+    writel(irq, gic_get_cpu_base() + GIC_CPU_EOI);
+}
+
 void gicv2_mask_irq(int irq)
 {
     gic_set_irq(irq, GIC_DIST_ENABLE_CLEAR);
@@ -147,8 +152,10 @@ void gic_handle_irq(void)
 
         if (irqnr == GENERIC_TIMER_IRQ)
             handle_timer_irq();
+        else if (irqnr == SYSTEM_TIMER1_IRQ)
+            handle_stimer_irq();
 
-        writel(irqnr, gic_get_cpu_base() + GIC_CPU_EOI);
+        gicv2_eoi_irq(irqnr);
 
     } while (0);
 }

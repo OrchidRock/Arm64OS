@@ -3,6 +3,7 @@
 
 #include "asm/pgtable_hwdef.h"
 #include "asm/pgtable_types.h"
+#include "asm/pgtable_prot.h"
 #include "asm/barrier.h"
 #include "mm.h"
 
@@ -30,7 +31,7 @@
 #define pgd_none(pgd) (!pgd_val(pgd))
 #define pud_none(pud) (!pud_val(pud))
 #define pmd_none(pmd) (!pmd_val(pmd))
-#define ptd_none(ptd) (!ptd_val(ptd))
+#define pte_none(ptd) (!pte_val(ptd))
 
 #define pmd_sect(pmd)	((pmd_val(pmd) & PMD_TYPE_MASK) == \
 				 PMD_TYPE_SECT)
@@ -92,9 +93,33 @@ static inline void set_pte(pte_t *ptep, pte_t pte)
 	dsb(ishst);
 }
 
+static inline pte_t set_pte_bit(pte_t pte, int bit)
+{
+	pte_val(pte) |= bit;
+	return pte;
+}
+
 static inline unsigned long mk_sect_prot(unsigned long prot)
 {
 	return prot & ~PTE_TABLE_BIT;
+}
+
+static inline pte_t pte_mkyoung(pte_t pte)
+{
+	return set_pte_bit(pte, PTE_AF);
+}
+
+static inline pte_t clear_pte_bit(pte_t pte, int bit)
+{
+	pte_val(pte) &=~ bit;
+	return pte;
+}
+
+static inline pte_t pte_mkwrite(pte_t pte)
+{
+	pte = set_pte_bit(pte, PTE_WRITE);
+	pte = clear_pte_bit(pte, PTE_RDONLY);
+	return pte;
 }
 
 #endif //PGTABLE_H
