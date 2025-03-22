@@ -11,11 +11,4 @@
 #define readl(c)	({ unsigned int  __v = __arch_getl(c); __iormb(); __v; })
 #define writel(v,c)	({ unsigned int  __v = v; __iowmb(); __arch_putl(__v,c);})
 
-void delay(unsigned long loops);
-inline void delay(unsigned long loops)
-{
-    while (loops--)
-        ;
-}
-
 #endif //IO_H

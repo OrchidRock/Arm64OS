@@ -2,6 +2,13 @@
 #include "asm/gpio.h"
 #include "io.h"
 
+//void delay(unsigned long loops);
+static inline void delay(unsigned long loops)
+{
+    while (loops--)
+        ;
+}
+
 void uart_init(void)
 {
 #ifndef RPI5_BCM2712
