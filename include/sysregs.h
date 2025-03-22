@@ -6,6 +6,9 @@
 
 #define HCR_HOST_NVHE_FLAGS (HCR_RW)
 
+#define SCTLR_ELx_C     (1<<2) /*data cache enable*/
+#define SCTLR_ELx_M	    (1<<0)
+
 #define SCTLR_EE_LITTLE_ENDIAN          (0 << 25)
 #define SCTLR_EOE_LITTLE_ENDIAN         (0 << 24)
 #define SCTLR_MMU_DISABLED   (0 << 0)
@@ -21,5 +24,17 @@
 #define CurrentEL_EL2 (2 << 2)
 #define CurrentEL_EL3 (3 << 2)
 
+#define read_sysreg(reg) ({ \
+    unsigned long _val; \
+    asm volatile("mrs %0," #reg \
+    : "=r"(_val)); \
+    _val; \
+})
+
+#define write_sysreg(val, reg) ({ \
+    unsigned long _val = (unsigned long)val; \
+    asm volatile("msr " #reg ", %x0" \
+    :: "rZ"(_val)); \
+})
 
 #endif

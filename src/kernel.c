@@ -4,6 +4,9 @@
 #include "timer.h"
 #include "esr.h"
 #include "asm/base.h"
+#include "arm-gic.h"
+#include "mmu.h"
+#include "mm.h"
 
 extern void trigger_invalid_alignment(void);
 
@@ -127,12 +130,21 @@ void parse_esr(unsigned int esr)
     }
 }
 
+void panic(void)
+{
+	printk("Kernel panic\n");
+	while (1)
+		;
+}
+
 void bad_mode(struct pt_regs *regs, int reason, unsigned int esr)
 {
     printk("Bad mode for %s handler detected, FAR: 0x%x esr: 0x%x - %s\n",
                     bad_mode_handler[reason], read_sysreg(far_el1),
                     esr, esr_get_class_string(esr));
     parse_esr(esr);
+
+    panic();
 }
 
 extern char _text_boot_start[], _text_boot_end[];
@@ -161,6 +173,28 @@ static void print_mem(void)
                     (unsigned long)(bss_end - bss_begin));
 }
 
+static int test_access_map_address(void)
+{
+	unsigned long address = TOTAL_MEMORY - 4096;
+	*(unsigned long *)address = 0x55;
+	printk("%s access 0x%x done\n", __func__, address);
+	return 0;
+}
+
+static int test_access_unmap_address(void)
+{
+	unsigned long address = TOTAL_MEMORY + 4096;
+	*(unsigned long *)address = 0x55;
+	printk("%s access 0x%x done\n", __func__, address);
+	return 0;
+}
+
+static void test_mmu(void)
+{
+	test_access_map_address();
+	test_access_unmap_address();
+}
+
 void start_kernel(void)
 {
     uart_init();
@@ -174,8 +208,12 @@ void start_kernel(void)
     //trigger_invalid_alignment();
 
     printk("done\n");
+
+    paging_init();
+	test_mmu();
+
 	gic_init(0, GIC_V2_DISTRIBUTOR_BASE, GIC_V2_CPU_INTERFACE_BASE);
-    timer_init();
+    //timer_init();
     raw_local_irq_enable();
 
     char buffer[64] = {0};

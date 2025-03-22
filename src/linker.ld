@@ -21,6 +21,9 @@ SECTIONS
     	.data : { 
 		*(.data) 
 	}
+		. = ALIGN(4096);
+    	idmap_pgd_dir = .;
+    	. += 4096;
         _data_end = .;
     	
     	.bss : { 
@@ -33,6 +36,6 @@ SECTIONS
 
         /* page table */
         . = ALIGN(4096);
-        init_pg_dir = .;
+        //init_pg_dir = .;
         . += 4096;
 }
