@@ -3,6 +3,7 @@
 #include "irq.h"
 #include "timer.h"
 #include "esr.h"
+#include "asm/base.h"
 
 extern void trigger_invalid_alignment(void);
 
@@ -173,7 +174,7 @@ void start_kernel(void)
     //trigger_invalid_alignment();
 
     printk("done\n");
-
+	gic_init(0, GIC_V2_DISTRIBUTOR_BASE, GIC_V2_CPU_INTERFACE_BASE);
     timer_init();
     raw_local_irq_enable();
 

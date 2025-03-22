@@ -2,6 +2,7 @@
 ## base variables
 HOME_ROOT_DIR ?= ./
 board ?= rpi4b
+enable_gic ?= 1
 
 ## Toolchain
 CC_PREFIX := aarch64-linux-gnu
@@ -17,6 +18,10 @@ OPTIMIZE ?= -O0
 DEFINE += -U__unix__ -U__linux__
 ifeq ($(board), rpi5)
 DEFINE += -DRPI5_BCM2712
+endif
+
+ifeq ($(enable_gic), 1)
+DEFINE += -DENABLE_GIC_V2
 endif
 
 ARCH += -DAARCH=64 -mcpu=cortex-a76 -mlittle-endian

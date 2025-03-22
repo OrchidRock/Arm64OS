@@ -1,8 +1,10 @@
 #include "asm/arm_local_regs.h"
+#include "asm/raw_irq_regs.h"
 #include "timer.h"
 #include "io.h"
+#include "arm-gic.h"
 
-#define HZ             (250)
+#define HZ             (25)
 #define NSEC_PER_SEC   (1000000000L)
 static unsigned int PNS_VAL = NSEC_PER_SEC / HZ;
 
@@ -36,6 +38,9 @@ void timer_init(void)
 {
     generic_timer_init();
     generic_timer_reset(PNS_VAL);
+
+    gicv2_unmask_irq(GENERIC_TIMER_IRQ);
+
     enable_timer_interrupt();
 }
 
