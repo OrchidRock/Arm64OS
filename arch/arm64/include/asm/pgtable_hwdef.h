@@ -29,9 +29,9 @@
 #define PTRS_PER_PTE (1 << (PMD_SHIFT - PTE_SHIFT))
 
 /* Section */
-#define SECTION_SHIFT	PMD_SHIFT
-#define SECTION_SIZE	(1UL << SECTION_SHIFT)
-#define SECTION_MASK	(~(SECTION_SIZE-1))
+#define PG_SECTION_SHIFT	PMD_SHIFT
+#define PG_SECTION_SIZE	    (1UL << PG_SECTION_SHIFT)
+#define PG_SECTION_MASK	    (~(PG_SECTION_SIZE-1))
 
 /*
  * Hardware page table definitions.

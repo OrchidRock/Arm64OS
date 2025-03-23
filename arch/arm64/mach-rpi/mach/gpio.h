@@ -2,10 +2,10 @@
 // Created by mimose on 25-3-19.
 //
 
-#ifndef GPIO_H
-#define GPIO_H
+#ifndef MACH_GPIO_H
+#define MACH_GPIO_H
 
-#include "asm/base.h"
+#include "mach/base.h"
 
 #define GPFSEL1      (PBASE + 0x00200004U)
 #define GPFSEL0      (PBASE + 0x0020001CU)

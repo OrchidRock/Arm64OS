@@ -1,25 +1,9 @@
 #ifndef IRQ_H
 #define IRQ_H
 
-static inline void arch_local_irq_disable(void)
-{
-    asm volatile(
-        "msr    daifset, #2"
-        :
-        :
-        : "memory");
-}
+#include "asm/irq.h"
 
-static inline void arch_local_irq_enable(void)
-{
-    asm volatile(
-        "msr    daifclr, #2"
-        :
-        :
-        : "memory");
-}
+#define raw_local_irq_disable()	arch_local_irq_disable()
+#define raw_local_irq_enable()	arch_local_irq_enable()
 
-#define raw_local_irq_disable() arch_local_irq_disable()
-#define raw_local_irq_enable() arch_local_irq_enable()
-
-#endif //IRQ_H
+#endif

@@ -1,6 +1,6 @@
-#include "io.h"
+#include "asm/io.h"
 #include "timer.h"
-#include "asm/arm_local_regs.h"
+#include "mach/arm_local_regs.h"
 
 #ifdef ENABLE_GIC_V2
 #include "arm-gic.h"

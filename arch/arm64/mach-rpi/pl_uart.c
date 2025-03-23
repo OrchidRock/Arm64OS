@@ -1,13 +1,8 @@
-#include "asm/pl_uart.h"
-#include "asm/gpio.h"
-#include "io.h"
+#include "mach/pl_uart.h"
+#include "mach/gpio.h"
+#include "asm/io.h"
 
 //void delay(unsigned long loops);
-static inline void delay(unsigned long loops)
-{
-    while (loops--)
-        ;
-}
 
 void uart_init(void)
 {

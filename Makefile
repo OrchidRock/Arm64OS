@@ -4,6 +4,8 @@ HOME_ROOT_DIR ?= ./
 board ?= rpi4b
 enable_gic ?= 1
 
+ARCH_DIR ?= arch/arm64
+
 ## Toolchain
 CC_PREFIX := aarch64-linux-gnu
 
@@ -25,44 +27,56 @@ DEFINE += -DENABLE_GIC_V2
 endif
 
 ARCH += -DAARCH=64 -mcpu=cortex-a76 -mlittle-endian
-INCLUDE +=  -I $(HOME_ROOT_DIR)/include
+INCLUDE +=  -I $(HOME_ROOT_DIR)/include -I $(HOME_ROOT_DIR)/$(ARCH_DIR)/include -I $(HOME_ROOT_DIR)/$(ARCH_DIR)/mach-rpi
 
 ASMFLAGS += -g $(ARCH) $(DEFINE) $(INCLUDE) $(OPTIMIZE)
 CFLAGS += $(ARCH) $(DEFINE) $(INCLUDE) $(OPTIMIZE)
 
-LDFLAGS	+= --section-start=.init=$(LOADADDR)
+LDFLAGS	+= --section-start=.init=$(LOADADDR) -p --no-undefined -X
 
-SRC_DIR := src
-BUILD_DIR := build
+#SRC_DIR := src
+#BUILD_DIR := build
 
 LOADADDR = 0x80000
 
 all : arm64os.bin
 
-$(BUILD_DIR)/%_c.o: $(SRC_DIR)/%.c
+%_c.o: %.c
 		mkdir -p $(@D)
 		$(CC_PREFIX)-gcc $(CFLAGS) -MMD -c $< -o $@
 
-$(BUILD_DIR)/%_s.o: $(SRC_DIR)/%.S
+%_s.o: %.S
 		mkdir -p $(@D)
 		$(CC_PREFIX)-gcc $(ASMFLAGS) -MMD -c $< -o $@
 
 
 #OBJ_FILES := $(wildcard $(BUILD_DIR)/*.o)
-C_FILES := $(wildcard $(SRC_DIR)/*.c)
-ASM_FILES := $(wildcard $(SRC_DIR)/*.S)
-OBJ_FILES := $(C_FILES:$(SRC_DIR)/%.c=$(BUILD_DIR)/%_c.o)
-OBJ_FILES += $(ASM_FILES:$(SRC_DIR)/%.S=$(BUILD_DIR)/%_s.o)
+C_FILES := $(wildcard $(HOME_ROOT_DIR)/init/*.c)
+ASM_FILES := $(wildcard $(HOME_ROOT_DIR)/init/*.S)
+C_FILES += $(wildcard $(HOME_ROOT_DIR)/kernel/*.c)
+ASM_FILES += $(wildcard $(HOME_ROOT_DIR)/kernel/*.S)
+C_FILES += $(wildcard $(HOME_ROOT_DIR)/lib/*.c)
+ASM_FILES += $(wildcard $(HOME_ROOT_DIR)/lib/*.S)
+C_FILES += $(wildcard $(HOME_ROOT_DIR)/mm/*.c)
+ASM_FILES += $(wildcard $(HOME_ROOT_DIR)/mm/*.S)
 
-DEP_FILES := %(OBJ_FILES:%.o:%.d)
+C_FILES += $(wildcard $(HOME_ROOT_DIR)/$(ARCH_DIR)/kernel/*.c)
+ASM_FILES += $(wildcard $(HOME_ROOT_DIR)/$(ARCH_DIR)/kernel/*.S)
+C_FILES += $(wildcard $(HOME_ROOT_DIR)/$(ARCH_DIR)/mach-rpi/*.c)
+ASM_FILES += $(wildcard $(HOME_ROOT_DIR)/$(ARCH_DIR)/mach-rpi/*.S)
+
+OBJ_FILES := $(C_FILES:%.c=%_c.o)
+OBJ_FILES += $(ASM_FILES:%.S=%_s.o)
+
+DEP_FILES := $(OBJ_FILES:%.o=%.d)
 -include $(DEP_FILES)
 
-arm64os.bin: $(SRC_DIR)/linker.ld $(OBJ_FILES)
-		$(CC_PREFIX)-ld -Map arm64os.map $(LDFLAGS) -T $(SRC_DIR)/linker.ld -o $(BUILD_DIR)/arm64os.elf $(OBJ_FILES) --start-group $(LIBS) $(EXTRALIBS) --end-group
-		$(CC_PREFIX)-objcopy -O binary $(BUILD_DIR)/arm64os.elf arm64os.bin
+arm64os.bin: arch/arm64/kernel/linker.ld $(OBJ_FILES)
+		$(CC_PREFIX)-ld -Map arm64os.map $(LDFLAGS) -T $(HOME_ROOT_DIR)/$(ARCH_DIR)/kernel/linker.ld -o arm64os.elf $(OBJ_FILES) --start-group $(LIBS) $(EXTRALIBS) --end-group
+		$(CC_PREFIX)-objcopy -O binary arm64os.elf arm64os.bin
 
 clean :
-		rm -rf $(BUILD_DIR) *.bin *.map
+		rm -rf $(OBJ_FILES) $(DEP_FILES) *.bin *.map
 
 qemu:
 		./qemu-system-aarch64 -M raspi4b2g -nographic -kernel arm64os.bin

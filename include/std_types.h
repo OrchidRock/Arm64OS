@@ -31,21 +31,21 @@
 #define ALIGN(x, a) __ALIGN_MASK(x, (typeof(x))(a) - 1)
 
 #ifndef __ASSEMBLY__
-typedef char s8;
-typedef unsigned char u8;
-
-typedef short s16;
-typedef unsigned short u16;
-
-typedef int s32;
-typedef unsigned int u32;
-
-typedef long long s64;
-typedef unsigned long long u64;
+//typedef char s8;
+//typedef unsigned char u8;
+//
+//typedef short s16;
+//typedef unsigned short u16;
+//
+//typedef int s32;
+//typedef unsigned int u32;
+//
+//typedef long long s64;
+//typedef unsigned long long u64;
 
 #ifndef _SIZE_T
 #define _SIZE_T
-typedef unsigned int size_t;
+//typedef unsigned int size_t;
 #endif
 
 #define offsetof(TYPE, MEMBER)	((long)&((TYPE *)0)->MEMBER)

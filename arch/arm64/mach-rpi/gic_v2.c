@@ -1,7 +1,8 @@
 #include "arm-gic.h"
-#include "io.h"
-#include "asm/raw_irq_regs.h"
+#include "asm/io.h"
+#include "mach/irq.h"
 #include "timer.h"
+#include "printk.h"
 
 struct gic_chip_data_t {
     unsigned long raw_dist_base;
@@ -119,7 +120,7 @@ int gic_init(int chip, unsigned long dist_base, unsigned long cpu_base)
 {
     struct gic_chip_data_t *gic;
     int gic_irqs;
-    int virq_base;
+    //int virq_base;
 
     gic = &gic_data[chip];
     gic->raw_dist_base = dist_base;

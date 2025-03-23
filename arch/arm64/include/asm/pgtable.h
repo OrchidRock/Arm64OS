@@ -93,7 +93,7 @@ static inline void set_pte(pte_t *ptep, pte_t pte)
 	dsb(ishst);
 }
 
-static inline pte_t set_pte_bit(pte_t pte, int bit)
+static inline pte_t set_pte_bit(pte_t pte, unsigned long bit)
 {
 	pte_val(pte) |= bit;
 	return pte;

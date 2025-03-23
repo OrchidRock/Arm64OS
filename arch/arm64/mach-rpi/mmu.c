@@ -1,10 +1,13 @@
 #include "mmu.h"
-#include "mm.h"
-#include "sysregs.h"
+#include "asm/mm.h"
+#include "asm/sysregs.h"
 #include "asm/pgtable.h"
 #include "asm/pgtable_types.h"
 #include "asm/pgtable_prot.h"
-#include "asm/base.h"
+#include "mach/base.h"
+#include "memory.h"
+#include "string.h"
+#include "printk.h"
 
 #define NO_BLOCK_MAPPINGS BIT(0)
 #define NO_CONT_MAPPINGS BIT(1)
@@ -70,7 +73,7 @@ static void alloc_init_pmd(pud_t *pudp, unsigned long addr,
     do {
         next = pmd_addr_end(addr, end);
 
-        if (((addr | next | phys) & ~SECTION_MASK) == 0 &&
+        if (((addr | next | phys) & ~PG_SECTION_MASK) == 0 &&
                 (flags & NO_BLOCK_MAPPINGS) == 0)
             pmd_set_section(pmdp, phys, prot);
         else

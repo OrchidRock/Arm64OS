@@ -1,5 +1,5 @@
-#include "mm.h"
-#include "sysregs.h"
+#include "asm/mm.h"
+#include "asm/sysregs.h"
 
 .section ".text.boot"
 

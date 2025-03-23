@@ -1,14 +1,8 @@
-#ifndef MM_H
-#define MM_H
+#ifndef ARCH_ASM_MM_H
+#define ARCH_ASM_MM_H
 
-
-#define PAGE_SHIFT     12
-#define TABLE_SHIFT    9
-#define SECTION_SHIFT  (PAGE_SHIFT + TABLE_SHIFT)
-
-#define PAGE_SIZE     (1 << PAGE_SHIFT)
-#define PAGE_MASK     (~(PAGE_SIZE-1))
-#define SECTION_SIZE  (1 << SECTION_SHIFT)
+#include "page.h"
+#include "std_types.h"
 
 #define LOW_MEMORY    (2 * SECTION_SIZE)    // 4M
 #define TOTAL_MEMORY  (512 * 0x100000)
@@ -32,10 +26,5 @@ void memzero(unsigned long src, unsigned long len);
 
 #define MAIR(attr, mt)	    ((attr) << ((mt) * 8))
 
-
-/* to align the pointer to the (next) page boundary */
-#define PAGE_ALIGN(addr)         (((addr)+PAGE_SIZE-1)&PAGE_MASK)
-#define PAGE_ALIGN_UP(addr)      PAGE_ALIGN(addr)
-#define PAGE_ALIGN_DOWN(addr)    (addr & PAGE_MASK)
 
 #endif //MM_H

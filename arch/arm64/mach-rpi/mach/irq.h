@@ -1,5 +1,5 @@
-#ifndef RAW_IRQ_REGS_H
-#define RAW_IRQ_REGS_H
+#ifndef MACH_IRQ_H
+#define MACH_IRQ_H
 
 #define IRQ_BASIC_PENDING	(PBASE+0x0000B200)
 #define IRQ_PENDING_0       (PBASE+0x0000B200)
@@ -19,4 +19,4 @@
 #define SYSTEM_TIMER0_IRQ  96
 #define SYSTEM_TIMER1_IRQ  97
 
-#endif //RAW_IRQ_REGS_H
+#endif //IRQ_H

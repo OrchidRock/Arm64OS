@@ -1,21 +1,7 @@
-#include "asm/pgtable_types.h"
-#include "uart.h"
-#include "irq.h"
-#include "timer.h"
+#include "printk.h"
 #include "esr.h"
-#include "asm/base.h"
-#include "arm-gic.h"
-#include "mmu.h"
-#include "mm.h"
-
-extern void trigger_invalid_alignment(void);
-
-#define read_sysreg(reg) ({ \
-        unsigned long __val; \
-        asm volatile("mrs %0," #reg \
-                      : "=r"(__val)); \
-        __val;\ 
-})
+#include "asm/system.h"
+#include "asm/sysregs.h"
 
 static const char * const bad_mode_handler[] = {
     "Sync Abort",
@@ -23,30 +9,6 @@ static const char * const bad_mode_handler[] = {
     "FIQ",
     "SError"
 };
-
-static const char *DATA_FAULT_CODE[] = {
-    [0] = "Address size fault, level0",
-    [1] = "Address size fault, level1",
-    [2] = "Address size fault, level2",
-    [3] = "Address size fault, level3",
-    [4] = "Translation fault, level0",
-    [5] = "Translation fault, level1",
-    [6] = "Translation fault, level2",
-    [7] = "Translation fault, level3",
-    [9] = "Access flag fault, level1",
-    [10] = "Access flag fault, level2",
-    [11] = "Access flag fault, level3",
-    [13] = "Permission fault, level1",
-    [14] = "Permission fault, level2",
-    [15] = "Permission fault, level3",
-    [0x21] = "Alignment fault",
-    [0x35] = "Unsupported Exclusive or Atomic access",
-};
-
-static const char *esr_get_dfsc_string(unsigned int esr)
-{
-    return DATA_FAULT_CODE[esr & 0x3f];
-}
 
 static const char *ESR_CLASS_STR[] = {
     [0 ... ESR_ELx_EC_MAX]		= "UNRECOGNIZED EC",
@@ -93,6 +55,32 @@ static const char *esr_get_class_string(unsigned int esr)
     return ESR_CLASS_STR[esr >> ESR_ELx_EC_SHIFT];
 }
 
+static const char *DATA_FAULT_CODE[] = {
+    [0] = "Address size fault, level0",
+    [1] = "Address size fault, level1",
+    [2] = "Address size fault, level2",
+    [3] = "Address size fault, level3",
+    [4] = "Translation fault, level0",
+    [5] = "Translation fault, level1",
+    [6] = "Translation fault, level2",
+    [7] = "Translation fault, level3",
+    [9] = "Access flag fault, level1",
+    [10] = "Access flag fault, level2",
+    [11] = "Access flag fault, level3",
+    [13] = "Permission fault, level1",
+    [14] = "Permission fault, level2",
+    [15] = "Permission fault, level3",
+    [0x21] = "Alignment fault",
+    [0x35] = "Unsupported Exclusive or Atomic access",
+};
+
+static const char *esr_get_dfsc_string(unsigned int esr)
+{
+    return DATA_FAULT_CODE[esr & 0x3f];
+}
+
+
+
 void parse_esr(unsigned int esr)
 {
     unsigned int ec = ESR_ELx_EC(esr);
@@ -132,9 +120,9 @@ void parse_esr(unsigned int esr)
 
 void panic(void)
 {
-	printk("Kernel panic\n");
-	while (1)
-		;
+    printk("Kernel panic\n");
+    while (1)
+        ;
 }
 
 void bad_mode(struct pt_regs *regs, int reason, unsigned int esr)
@@ -146,86 +134,3 @@ void bad_mode(struct pt_regs *regs, int reason, unsigned int esr)
 
     panic();
 }
-
-extern char _text_boot_start[], _text_boot_end[];
-extern char _text_start[], _text_end[];
-extern char _rodata_start[], _rodata_end[];
-extern char _data_start[], _data_end[];
-extern char bss_begin[], bss_end[];
-
-static void print_mem(void)
-{
-    printk("Arm64OS image layout:\n");
-    printk("  .text.boot: 0x%08lx - 0x%08lx (%6ld B)\n",
-                    (unsigned long)_text_boot_start, (unsigned long)_text_boot_end,
-                    (unsigned long)(_text_boot_end - _text_boot_start));
-    printk("       .text: 0x%08lx - 0x%08lx (%6ld B)\n",
-                    (unsigned long)_text_start, (unsigned long)_text_end,
-                    (unsigned long)(_text_end - _text_start));
-    printk("     .rodata: 0x%08lx - 0x%08lx (%6ld B)\n",
-                    (unsigned long)_rodata_start, (unsigned long)_rodata_end,
-                    (unsigned long)(_rodata_end - _rodata_start));
-    printk("       .data: 0x%08lx - 0x%08lx (%6ld B)\n",
-                    (unsigned long)_data_start, (unsigned long)_data_end,
-                    (unsigned long)(_data_end - _data_start));
-    printk("        .bss: 0x%08lx - 0x%08lx (%6ld B)\n",
-                    (unsigned long)bss_begin, (unsigned long)bss_end,
-                    (unsigned long)(bss_end - bss_begin));
-}
-
-static int test_access_map_address(void)
-{
-	unsigned long address = TOTAL_MEMORY - 4096;
-	*(unsigned long *)address = 0x55;
-	printk("%s access 0x%x done\n", __func__, address);
-	return 0;
-}
-
-static int test_access_unmap_address(void)
-{
-	unsigned long address = TOTAL_MEMORY + 4096;
-	*(unsigned long *)address = 0x55;
-	printk("%s access 0x%x done\n", __func__, address);
-	return 0;
-}
-
-static void test_mmu(void)
-{
-	test_access_map_address();
-	test_access_unmap_address();
-}
-
-void start_kernel(void)
-{
-    uart_init();
-    uart_send_string("Hello World from Arm64OS!\r\n");
-
-    init_printk_done();
-    printk("printk init done.\n");
-   
-    print_mem(); 
-
-    //trigger_invalid_alignment();
-
-    printk("done\n");
-
-    paging_init();
-
-    dump_pgtable();
-    test_walk_pgtable();
-	test_mmu();
-
-	gic_init(0, GIC_V2_DISTRIBUTOR_BASE, GIC_V2_CPU_INTERFACE_BASE);
-    timer_init();
-    //system_timer_init();
-    raw_local_irq_enable();
-
-    char buffer[64] = {0};
-    while(1) {
-        uart_send_string("> ");
-        uart_recv_string(buffer, sizeof(buffer));
-        uart_send_string(buffer);
-        uart_send_string("\r\n");
-    }
-}
-

@@ -1,8 +1,10 @@
 #include "asm/pgtable_types.h"
 #include "asm/pgtable_prot.h"
 #include "asm/pgtable.h"
-#include "asm/base.h"
-#include "mm.h"
+#include "mach/base.h"
+#include "asm/mm.h"
+
+typedef unsigned int size_t;
 
 extern char idmap_pgd_dir[];
 extern char readonly_page[];

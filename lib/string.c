@@ -1,4 +1,25 @@
+
 typedef unsigned int size_t;
+
+size_t strlen(const char *s)
+{
+	const char *sc;
+
+	for (sc = s; *sc != '\0'; ++sc)
+		;
+
+	return sc - s;
+}
+
+void *memcpy(void *dest, const void *src, size_t count)
+{
+	char *tmp = dest;
+	const char *s = src;
+
+	while (count--)
+		*tmp++ = *s++;
+	return dest;
+}
 
 static void *__memset_1bytes(void *s, int c, size_t count)
 {
@@ -22,7 +43,7 @@ static void __memset_16bytes_asm(void *p, unsigned long data,
 			: "+r" (p), "+r" (count), "+r" (i)
 			: "r" (data)
 			: "memory"
-		     );
+			 );
 
 }
 

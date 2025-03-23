@@ -1,9 +1,11 @@
-#include "asm/arm_local_regs.h"
-#include "asm/raw_irq_regs.h"
-#include "asm/timer_regs.h"
+#include "mach/arm_local_regs.h"
+#include "asm/irq.h"
+#include "mach/timer.h"
+#include "mach/irq.h"
 #include "timer.h"
-#include "io.h"
+#include "asm/io.h"
 #include "arm-gic.h"
+#include "printk.h"
 
 #define HZ             (25)
 #define NSEC_PER_SEC   (1000000000L)
