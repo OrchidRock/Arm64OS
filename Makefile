@@ -39,7 +39,9 @@ LDFLAGS	+= --section-start=.init=$(LOADADDR) -p --no-undefined -X
 
 LOADADDR = 0x80000
 
-all : arm64os.bin
+target ?= arm64os
+
+all : $(target).bin
 
 %_c.o: %.c
 		mkdir -p $(@D)
@@ -71,13 +73,13 @@ OBJ_FILES += $(ASM_FILES:%.S=%_s.o)
 DEP_FILES := $(OBJ_FILES:%.o=%.d)
 -include $(DEP_FILES)
 
-arm64os.bin: arch/arm64/kernel/linker.ld $(OBJ_FILES)
-		$(CC_PREFIX)-ld -Map arm64os.map $(LDFLAGS) -T $(HOME_ROOT_DIR)/$(ARCH_DIR)/kernel/linker.ld -o arm64os.elf $(OBJ_FILES) --start-group $(LIBS) $(EXTRALIBS) --end-group
-		$(CC_PREFIX)-objcopy -O binary arm64os.elf arm64os.bin
+$(target).bin: arch/arm64/kernel/linker.ld $(OBJ_FILES)
+		$(CC_PREFIX)-ld -Map arm64os.map $(LDFLAGS) -T $(HOME_ROOT_DIR)/$(ARCH_DIR)/kernel/linker.ld -o $(target).elf $(OBJ_FILES) --start-group $(LIBS) $(EXTRALIBS) --end-group
+		$(CC_PREFIX)-objcopy -O binary $(target).elf $(target).bin
 
 clean :
-		rm -rf $(OBJ_FILES) $(DEP_FILES) *.bin *.map
+		rm -rf $(OBJ_FILES) $(DEP_FILES) *.bin *.elf *.map
 
 qemu:
-		./qemu-system-aarch64 -M raspi4b2g -nographic -kernel arm64os.bin
+		./qemu-system-aarch64 -M raspi4b2g -nographic -kernel $(target).bin
 
