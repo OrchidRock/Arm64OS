@@ -29,7 +29,7 @@ endif
 ARCH += -DAARCH=64 -mcpu=cortex-a76 -mlittle-endian
 INCLUDE +=  -I $(HOME_ROOT_DIR)/include -I $(HOME_ROOT_DIR)/$(ARCH_DIR)/include -I $(HOME_ROOT_DIR)/$(ARCH_DIR)/mach-rpi
 
-ASMFLAGS += -g $(ARCH) $(DEFINE) $(INCLUDE) $(OPTIMIZE)
+ASMFLAGS += -g $(ARCH) $(DEFINE) $(INCLUDE) $(OPTIMIZE) -ffreestanding
 CFLAGS += $(ARCH) $(DEFINE) $(INCLUDE) $(OPTIMIZE)
 
 LDFLAGS	+= --section-start=.init=$(LOADADDR) -p --no-undefined -X

@@ -1,8 +1,12 @@
 #include "asm/mm.h"
 #include "asm/sysregs.h"
 
-.section ".text.boot"
+.align 3
+.globl sp_addr
+sp_addr:
+	.quad init_task_union + THREAD_START_SP
 
+.section ".text.boot"
 .global _start
 _start:
         mrs x0, mpidr_el1
@@ -42,18 +46,20 @@ el2_entry:
 el1_entry:
 	mrs x5, CurrentEL
 
-        /* set vbar reg */
-        ldr x5, =vectors
-        msr vbar_el1, x5
+    /* set vbar reg */
+    ldr x5, =vectors
+    msr vbar_el1, x5
 
-        adr x0, bss_begin
-        adr x1, bss_end
-        sub x1, x1, x0
-        bl memzero
+    adr x0, bss_begin
+    adr x1, bss_end
+    sub x1, x1, x0
+    bl memzero
 
-        mov sp, #LOW_MEMORY
-        bl start_kernel
-        b hang_proc
+    ldr x8, =sp_addr
+    ldr x9, [x8]
+    mov sp, x9
+    bl start_kernel
+    b hang_proc
 
 hang_proc:
         b hang_proc

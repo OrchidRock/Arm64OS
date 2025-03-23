@@ -6,9 +6,8 @@
 #include "asm/io.h"
 #include "arm-gic.h"
 #include "printk.h"
+#include "sched.h"
 
-#define HZ             (25)
-#define NSEC_PER_SEC   (1000000000L)
 static unsigned int PNS_VAL = NSEC_PER_SEC / HZ;
 
 static unsigned int sys_timer_val = 0;
@@ -53,7 +52,8 @@ void timer_init(void)
 void handle_timer_irq(void)
 {
     generic_timer_reset(PNS_VAL);
-    printk("Core 0 Timer interrupt received\r\n");
+    tick_handle_periodic();
+    //printk("Core 0 Timer interrupt received\r\n");
 }
 
 

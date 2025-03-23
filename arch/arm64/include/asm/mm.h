@@ -27,4 +27,7 @@ void memzero(unsigned long src, unsigned long len);
 #define MAIR(attr, mt)	    ((attr) << ((mt) * 8))
 
 
+#define THREAD_SIZE  (1 * PAGE_SIZE)
+#define THREAD_START_SP  (THREAD_SIZE - 8)
+
 #endif //MM_H

@@ -1,6 +1,7 @@
-
 #include "asm/asm-offsets.h"
+#include "asm/mm.h"
 
+#define THREAD_SIZE_MASK (~())
 #define BAD_SYNC    0
 #define BAD_IRQ     1
 #define BAD_FIQ     2
@@ -206,11 +207,33 @@ el0_fiq_invalid:
 el0_error_invalid:
     inv_entry 0, BAD_ERROR
 
+tsk     .req    x28             // current thread_info
+
+.align 2
 el1_irq:
     str x30, [sp, -8]!
     bl kernel_context_save
     bl irq_handler
+
+    mov tsk, sp
+    mov x27, #THREAD_SIZE
+    sub x27, x27, #1
+    mvn x27, x27
+    and tsk, tsk, x27
+
+    ldr  w24, [tsk, #TI_PREEMPT]
+    cbnz w24, 1f
+    ldr  w0, [tsk, #NEED_RESCHED]
+    cbz w0, 1f
+    bl el1_preempt
+1:
     bl kernel_context_res
+
+el1_preempt:
+	mov     x24, lr
+	bl preempt_schedule_irq
+	ret     x24
+
 
 #if 0
 string_test:

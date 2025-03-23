@@ -65,11 +65,19 @@ static void test_mmu(void)
 
 register unsigned long current_stack_pointer asm ("sp");
 
-void kernel_thread(void)
+void kernel_thread1(void)
 {
 	while (1) {
-		delay(100000000);
+		delay(80000);
 		printk("%s: %s\n", __func__, "12345");
+	}
+}
+
+void kernel_thread2(void)
+{
+	while (1) {
+		delay(50000);
+		printk("%s: %s\n", __func__, "abcde");
 	}
 }
 
@@ -82,7 +90,8 @@ void start_kernel(void)
     printk("printk init done.\n");
 
     mem_init((unsigned long)bss_end, TOTAL_MEMORY);
-    print_mem(); 
+	sched_init();
+    print_mem();
 
     //trigger_invalid_alignment();
 
@@ -102,15 +111,15 @@ void start_kernel(void)
     //system_timer_init();
     raw_local_irq_enable();
 
-    int pid = do_fork(PF_KTHREAD, (unsigned long)&kernel_thread, 0);
+	int pid;
+
+	pid = do_fork(PF_KTHREAD, (unsigned long)&kernel_thread1, 0);
 	if (pid < 0)
 		printk("create thread fail\n");
-    else {
-    	printk("create kernel thread: %d\n", pid);
-    }
 
-	struct task_struct *next = g_task[pid];
-	switch_to(next);
+	pid = do_fork(PF_KTHREAD, (unsigned long)&kernel_thread2, 0);
+	if (pid < 0)
+		printk("create thread fail\n");
 
     char buffer[64] = {0};
     while(1) {

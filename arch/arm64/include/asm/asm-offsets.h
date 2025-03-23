@@ -30,6 +30,8 @@
 #define S_SYSCALLNO 280 /* offsetof(struct pt_regs, syscallno)	// */
 #define S_ORIG_ADDR_LIMIT 288 /* offsetof(struct pt_regs, orig_addr_limit)	// */
 #define S_STACKFRAME 304 /* offsetof(struct pt_regs, stackframe)	// */
-#define THREAD_CPU_CONTEXT 24 /* offsetof(struct task_struct, cpu_context)	// */
+#define THREAD_CPU_CONTEXT 16 /* offsetof(struct task_struct, cpu_context)	// */
+#define TI_PREEMPT 148 /* offsetof(struct task_struct, preempt_count)	// */
+#define NEED_RESCHED 144 /* offsetof(struct task_struct, need_resched)	// */
 
 #endif
