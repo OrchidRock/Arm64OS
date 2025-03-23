@@ -9,6 +9,7 @@
 #include "mmu.h"
 #include "memory.h"
 #include "printk.h"
+#include "sched.h"
 
 extern void trigger_invalid_alignment(void);
 
@@ -17,6 +18,8 @@ extern char _text_start[], _text_end[];
 extern char _rodata_start[], _rodata_end[];
 extern char _data_start[], _data_end[];
 extern char bss_begin[], bss_end[];
+
+extern union task_union init_task_union;
 
 static void print_mem(void)
 {
@@ -60,6 +63,16 @@ static void test_mmu(void)
 	test_access_unmap_address();
 }
 
+register unsigned long current_stack_pointer asm ("sp");
+
+void kernel_thread(void)
+{
+	while (1) {
+		delay(100000000);
+		printk("%s: %s\n", __func__, "12345");
+	}
+}
+
 void start_kernel(void)
 {
     uart_init();
@@ -73,18 +86,31 @@ void start_kernel(void)
 
     //trigger_invalid_alignment();
 
+	printk("init(0) thread's task_struct address: 0x%lx\n", &init_task_union.task);
+	printk("the SP of 0 thread: 0x%lx\n", current_stack_pointer);
+
     printk("done\n");
 
     paging_init();
 
     dump_pgtable();
     test_walk_pgtable();
-	test_mmu();
+	//test_mmu();
 
 	gic_init(0, GIC_V2_DISTRIBUTOR_BASE, GIC_V2_CPU_INTERFACE_BASE);
     timer_init();
     //system_timer_init();
     raw_local_irq_enable();
+
+    int pid = do_fork(PF_KTHREAD, (unsigned long)&kernel_thread, 0);
+	if (pid < 0)
+		printk("create thread fail\n");
+    else {
+    	printk("create kernel thread: %d\n", pid);
+    }
+
+	struct task_struct *next = g_task[pid];
+	switch_to(next);
 
     char buffer[64] = {0};
     while(1) {

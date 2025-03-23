@@ -1,34 +1,10 @@
 
+#include "asm/asm-offsets.h"
+
 #define BAD_SYNC    0
 #define BAD_IRQ     1
 #define BAD_FIQ     2
 #define BAD_ERROR   3
-
-#define S_FRAME_SIZE 272 /* sizeof(struct pt_regs)	// */
-#define S_X0 0 /* offsetof(struct pt_regs, regs[0])	// */
-#define S_X1 8 /* offsetof(struct pt_regs, regs[1])	// */
-#define S_X2 16 /* offsetof(struct pt_regs, regs[2])	// */
-#define S_X3 24 /* offsetof(struct pt_regs, regs[3])	// */
-#define S_X4 32 /* offsetof(struct pt_regs, regs[4])	// */
-#define S_X5 40 /* offsetof(struct pt_regs, regs[5])	// */
-#define S_X6 48 /* offsetof(struct pt_regs, regs[6])	// */
-#define S_X7 56 /* offsetof(struct pt_regs, regs[7])	// */
-#define S_X8 64 /* offsetof(struct pt_regs, regs[8])	// */
-#define S_X10 80 /* offsetof(struct pt_regs, regs[10])	// */
-#define S_X12 96 /* offsetof(struct pt_regs, regs[12])	// */
-#define S_X14 112 /* offsetof(struct pt_regs, regs[14])	// */
-#define S_X16 128 /* offsetof(struct pt_regs, regs[16])	// */
-#define S_X18 144 /* offsetof(struct pt_regs, regs[18])	// */
-#define S_X20 160 /* offsetof(struct pt_regs, regs[20])	// */
-#define S_X22 176 /* offsetof(struct pt_regs, regs[22])	// */
-#define S_X24 192 /* offsetof(struct pt_regs, regs[24])	// */
-#define S_X26 208 /* offsetof(struct pt_regs, regs[26])	// */
-#define S_X28 224 /* offsetof(struct pt_regs, regs[28])	// */
-#define S_FP 232 /* offsetof(struct pt_regs, regs[29])	// */
-#define S_LR 240 /* offsetof(struct pt_regs, regs[30])	// */
-#define S_SP 248 /* offsetof(struct pt_regs, sp)	// */
-#define S_PC 256 /* offsetof(struct pt_regs, pc)	// */
-#define S_PSTATE 264 /* offsetof(struct pt_regs, pstate)	// */
 
 /* macro define */
 
@@ -236,7 +212,7 @@ el1_irq:
     bl irq_handler
     bl kernel_context_res
 
-#if 1
+#if 0
 string_test:
     .string "t"
 
@@ -246,3 +222,42 @@ trigger_invalid_alignment:
     ldr x1, [x0]
     ret
 #endif
+
+.align 2
+.global ret_to_user
+ret_to_user:
+	inv_entry 0, BAD_ERROR
+
+.align 2
+.global ret_from_fork
+ret_from_fork:
+	cbz x19, 1f
+	mov x0, x20
+	blr x19
+1:
+	b ret_to_user
+
+.align
+.global cpu_switch_to
+cpu_switch_to:
+    add     x8, x0, #THREAD_CPU_CONTEXT
+    mov     x9, sp
+    stp     x19, x20, [x8], #16
+    stp     x21, x22, [x8], #16
+    stp     x23, x24, [x8], #16
+    stp     x25, x26, [x8], #16
+    stp     x27, x28, [x8], #16
+    stp     x29, x9, [x8], #16
+    str     lr, [x8]
+
+    add     x8, x1, #THREAD_CPU_CONTEXT
+    ldp     x19, x20, [x8], #16
+    ldp     x21, x22, [x8], #16
+    ldp     x23, x24, [x8], #16
+    ldp     x25, x26, [x8], #16
+    ldp     x27, x28, [x8], #16
+    ldp     x29, x9, [x8], #16
+    ldr     lr, [x8]
+    mov     sp, x9
+    ret
+
