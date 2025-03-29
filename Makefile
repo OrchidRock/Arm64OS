@@ -67,6 +67,8 @@ ASM_FILES += $(wildcard $(HOME_ROOT_DIR)/$(ARCH_DIR)/kernel/*.S)
 C_FILES += $(wildcard $(HOME_ROOT_DIR)/$(ARCH_DIR)/mach-rpi/*.c)
 ASM_FILES += $(wildcard $(HOME_ROOT_DIR)/$(ARCH_DIR)/mach-rpi/*.S)
 
+C_FILES += $(wildcard $(HOME_ROOT_DIR)/drivers/irqchip/*.c)
+
 OBJ_FILES := $(C_FILES:%.c=%_c.o)
 OBJ_FILES += $(ASM_FILES:%.S=%_s.o)
 

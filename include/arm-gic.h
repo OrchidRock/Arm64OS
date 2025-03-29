@@ -80,7 +80,5 @@
 #define GICH_MISR_EOI			(1 << 0)
 
 int gic_init(int chip, unsigned long dist_base, unsigned long cpu_base);
-void gic_handle_irq(void);
-void gicv2_unmask_irq(int irq);
 
 #endif //ARM_GIC_H

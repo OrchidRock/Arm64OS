@@ -1,10 +1,12 @@
 #include "asm/pgtable_types.h"
+#include "asm/sysregs.h"
 #include "asm/mm.h"
 #include "uart.h"
 #include "irq.h"
 #include "timer.h"
 #include "esr.h"
 #include "mach/base.h"
+#include "mach/timer.h"
 #include "arm-gic.h"
 #include "mmu.h"
 #include "memory.h"
@@ -89,6 +91,12 @@ void start_kernel(void)
     init_printk_done();
     printk("printk init done.\n");
 
+    printk("Running on EL:");
+	int el = read_sysreg(CurrentEL) >> 2;
+	printk("%d\n", el);
+
+    arch_irq_init();
+
     mem_init((unsigned long)bss_end, TOTAL_MEMORY);
 	sched_init();
     print_mem();
@@ -102,11 +110,12 @@ void start_kernel(void)
 
     paging_init();
 
+#ifdef DEBUG_DUMP_PGTABLE
     dump_pgtable();
     test_walk_pgtable();
+#endif
 	//test_mmu();
 
-	gic_init(0, GIC_V2_DISTRIBUTOR_BASE, GIC_V2_CPU_INTERFACE_BASE);
     timer_init();
     //system_timer_init();
     raw_local_irq_enable();

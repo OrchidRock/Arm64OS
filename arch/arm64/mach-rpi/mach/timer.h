@@ -34,4 +34,6 @@
 #define TIMER_CTRL    (PERIPHERAL_BASE+0x34)
 #define TIMER_FLAG    (PERIPHERAL_BASE+0x38)
 
+void timer_init(void);
+
 #endif //TIMER_REGS_H

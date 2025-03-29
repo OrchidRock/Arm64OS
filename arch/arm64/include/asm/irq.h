@@ -23,4 +23,6 @@ static inline void arch_local_irq_enable(void)
         : "memory");
 }
 
+void arch_irq_init(void);
+
 #endif //ASM_IRQ_H

@@ -12,10 +12,4 @@
 #define CONFIG_HZ 250
 #define HZ CONFIG_HZ	/* Internal kernel timer frequency */
 
-void timer_init();
-void handle_timer_irq(void);
-
-void system_timer_init(void);
-void handle_stimer_irq(void);
-
 #endif //TIMER_H
