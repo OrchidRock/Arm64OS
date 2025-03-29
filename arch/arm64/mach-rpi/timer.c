@@ -53,7 +53,7 @@ static inline void enable_timer_interrupt(void)
 
 int handle_timer_irq(int irq, void *param)
 {
-    printk("Core 0 Timer interrupt received\r\n");
+    //printk("Core 0 Timer interrupt received\r\n");
     generic_timer_reset(arch_timer_rate);
     tick_handle_periodic();
 

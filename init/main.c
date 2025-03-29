@@ -4,7 +4,7 @@
 #include "uart.h"
 #include "irq.h"
 #include "timer.h"
-#include "esr.h"
+#include "asm/esr.h"
 #include "mach/base.h"
 #include "mach/timer.h"
 #include "arm-gic.h"
@@ -67,20 +67,43 @@ static void test_mmu(void)
 
 register unsigned long current_stack_pointer asm ("sp");
 
-void kernel_thread1(void)
+int kernel_thread1(void *arg)
 {
 	while (1) {
 		delay(80000);
 		printk("%s: %s\n", __func__, "12345");
 	}
+    return 0;
 }
 
-void kernel_thread2(void)
+int kernel_thread2(void *arg)
 {
 	while (1) {
 		delay(50000);
 		printk("%s: %s\n", __func__, "abcde");
 	}
+    return 0;
+}
+
+int run_user_thread(void* arg)
+{
+    //printk("%s: running at EL%d\n", __func__, read_sysreg(CurrentEL) >> 2);
+    int my_local_var = 0;
+    while (1) {
+       delay(50000);
+       my_local_var += 1;
+       //printk("%s: runing at userspace\n", __func__);
+    }
+    return 0;
+}
+
+int user_thread(void *arg)
+{
+    printk("%s: running at EL%d\n", __func__, read_sysreg(CurrentEL) >> 2);
+    if (move_to_user_space((unsigned long)&run_user_thread))
+        printk("error move_to_user_space\n");
+
+    return 0;
 }
 
 void start_kernel(void)
@@ -108,7 +131,7 @@ void start_kernel(void)
 
     printk("done\n");
 
-    paging_init();
+    //paging_init();
 
 #ifdef DEBUG_DUMP_PGTABLE
     dump_pgtable();
@@ -122,13 +145,18 @@ void start_kernel(void)
 
 	int pid;
 
-	pid = do_fork(PF_KTHREAD, (unsigned long)&kernel_thread1, 0);
-	if (pid < 0)
-		printk("create thread fail\n");
+//	pid = kernel_thread(kernel_thread1, 0, 0);
+//	if (pid < 0)
+//		printk("create thread fail\n");
+//
+//	pid = kernel_thread(kernel_thread2, 0, 0);
+//	if (pid < 0)
+//		printk("create thread fail\n");
 
-	pid = do_fork(PF_KTHREAD, (unsigned long)&kernel_thread2, 0);
-	if (pid < 0)
-		printk("create thread fail\n");
+    /* Create User thread. */
+    pid = kernel_thread(user_thread, 0, 0);
+    if (pid < 0)
+        printk("create thread fail\n");
 
     char buffer[64] = {0};
     while(1) {

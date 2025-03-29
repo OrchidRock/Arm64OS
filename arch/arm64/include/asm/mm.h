@@ -28,6 +28,6 @@ void memzero(unsigned long src, unsigned long len);
 
 
 #define THREAD_SIZE  (1 * PAGE_SIZE)
-#define THREAD_START_SP  (THREAD_SIZE - 8)
+#define THREAD_START_SP  (THREAD_SIZE - 16)
 
 #endif //MM_H

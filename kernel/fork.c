@@ -38,7 +38,7 @@ static struct pt_regs *task_pt_regs(struct task_struct *tsk)
 }
 
 static int copy_thread(unsigned long clone_flags, struct task_struct *p,
-        unsigned long fn, unsigned long arg)
+        unsigned long stack, unsigned long arg)
 {
     struct pt_regs *childregs;
 
@@ -48,8 +48,15 @@ static int copy_thread(unsigned long clone_flags, struct task_struct *p,
 
     if (clone_flags & PF_KTHREAD) {
         childregs->pstate = PSR_MODE_EL1h;
-        p->cpu_context.x19 = fn;
+        p->cpu_context.x19 = stack;
         p->cpu_context.x20 = arg;
+    } else {
+        *childregs = *task_pt_regs(current);
+        childregs->regs[0] = 0;
+        if (stack) {
+            if (stack & 15) return -1;
+            childregs->sp = stack;
+        }
     }
 
     p->cpu_context.pc = (unsigned long)ret_from_fork;
@@ -58,8 +65,13 @@ static int copy_thread(unsigned long clone_flags, struct task_struct *p,
     return 0;
 }
 
+static void free_task(struct task_struct *p)
+{
+	p = NULL;
+}
+
 /* fork a new task. */
-int do_fork(unsigned long clone_flags, unsigned long fn, unsigned long arg)
+int do_fork(unsigned long clone_flags, unsigned long stack, unsigned long arg)
 {
     struct task_struct *p;
     int pid;
@@ -68,12 +80,14 @@ int do_fork(unsigned long clone_flags, unsigned long fn, unsigned long arg)
     if (!p)
         goto error;
 
+    memset(p, 0, sizeof(*p));
+
     pid = find_empty_task();
     if (pid < 0)
-        goto error;
+        goto free_page;
 
-    if (copy_thread(clone_flags, p, fn, arg))
-        goto error;
+    if (copy_thread(clone_flags, p, stack, arg))
+        goto free_task;
 
     p->state = TASK_RUNNING;
     p->pid = pid;
@@ -88,6 +102,41 @@ int do_fork(unsigned long clone_flags, unsigned long fn, unsigned long arg)
     wake_up_process(p);
 
     return pid;
+
+free_task:
+    free_task(p);
+free_page:
+    free_page((unsigned long)p);
 error:
     return -1;
+}
+
+static void start_user_thread(struct pt_regs *regs, unsigned long pc,
+		unsigned long sp)
+{
+	memset(regs, 0, sizeof(*regs));
+	regs->pc = pc;
+	regs->pstate = PSR_MODE_EL0t;
+	regs->sp = sp;
+}
+
+int kernel_thread(int (*fn)(void *), void *arg, unsigned long flags)
+{
+    return do_fork(flags | PF_KTHREAD, (unsigned long)fn, (unsigned long)arg);
+}
+
+int move_to_user_space(unsigned long pc)
+{
+	struct pt_regs *regs;
+	unsigned long stack;
+
+	regs = task_pt_regs(current);
+	stack = get_free_page();
+	if (!stack)
+		return -1;
+
+    memset((void *)stack, 0, PAGE_SIZE);
+	start_user_thread(regs, pc, stack + PAGE_SIZE);
+
+	return 0;
 }

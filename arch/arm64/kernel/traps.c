@@ -1,5 +1,5 @@
 #include "printk.h"
-#include "esr.h"
+#include "asm/esr.h"
 #include "asm/system.h"
 #include "asm/sysregs.h"
 
@@ -127,6 +127,11 @@ void panic(void)
 
 void bad_mode(struct pt_regs *regs, int reason, unsigned int esr)
 {
+    if (reason >= 4) {
+        printk("bad mode reason: 0x%08x\n", reason);
+        printk("%s: running at EL%d\n", __func__, read_sysreg(CurrentEL) >> 2);
+        reason &= 0x3;
+    }
     printk("Bad mode for %s handler detected, FAR: 0x%x esr: 0x%x - %s\n",
                     bad_mode_handler[reason], read_sysreg(far_el1),
                     esr, esr_get_class_string(esr));

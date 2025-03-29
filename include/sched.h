@@ -93,7 +93,6 @@ extern union task_union init_task_union;
 
 
 extern void ret_from_fork(void);
-int do_fork(unsigned long clone_flags, unsigned long fn, unsigned long arg);
 struct task_struct * switch_to(struct task_struct *prev, struct task_struct *next);
 extern struct task_struct *cpu_switch_to(struct task_struct *prev,
                      struct task_struct *next);
@@ -106,6 +105,10 @@ void task_tick(struct run_queue *rq, struct task_struct *p);
 void enqueue_task(struct run_queue *rq, struct task_struct *p);
 struct task_struct *pick_next_task(struct run_queue *rq, struct task_struct *prev);
 void tick_handle_periodic(void);
+void wake_up_process(struct task_struct *p);
+int move_to_user_space(unsigned long pc);
+int kernel_thread(int (*fn)(void *), void *arg, unsigned long flags);
+
 
 static inline void preempt_add(int val)
 {

@@ -1,5 +1,6 @@
 #include "asm/asm-offsets.h"
 #include "asm/mm.h"
+#include "asm/esr.h"
 
 #define THREAD_SIZE_MASK (~())
 #define BAD_SYNC    0
@@ -8,6 +9,10 @@
 #define BAD_ERROR   3
 
 /* macro define */
+
+.macro	disable_irq
+	msr	daifset, #2
+.endm
 
 .macro inv_entry el, reason
     mov x0, sp
@@ -21,8 +26,8 @@
     b \label
 .endm
 
-#if 0
-.macro kernel_context_save
+#if 1
+.macro kernel_context_save el
     sub sp, sp, #S_FRAME_SIZE
     // save general register: x0 - x29
     stp x0, x1, [sp, #16 *0]
@@ -41,8 +46,12 @@
     stp x26, x27, [sp, #16 *13]
     stp x28, x29, [sp, #16 *14]
 
-    // get stack top
-    add     x21, sp, #S_FRAME_SIZE
+.if \el == 0
+	mrs x21, sp_el0
+.else
+	/* x21: get stack top */
+	add     x21, sp, #S_FRAME_SIZE
+.endif
 
     // get ELR reg
     mrs     x22, elr_el1
@@ -57,9 +66,14 @@
     stp     x22, x23, [sp, #S_PC]
 .endm
 
-.macro kernel_context_res
+.macro kernel_context_res el
     //load ELR, SPSR
     ldp     x21, x22, [sp, #S_PC]
+.if \el == 0
+	ldr     x23, [sp, #S_SP]
+	msr     sp_el0, x23
+.endif
+
     msr     elr_el1, x21
     msr     spsr_el1, x22
     ldp     x0, x1, [sp, #16 * 0]
@@ -80,10 +94,12 @@
 
     ldr     lr, [sp, #S_LR]
     add     sp, sp, #S_FRAME_SIZE
+
     eret
 .endm
 #endif
 
+#if 0
 kernel_context_save:
     sub sp, sp, #S_FRAME_SIZE
     // save general register: x0 - x29
@@ -122,6 +138,11 @@ kernel_context_save:
 kernel_context_res:
     //load ELR, SPSR
     ldp     x21, x22, [sp, #S_PC]
+    cbnz    x0, RES_EL1
+    ldr     x23, [sp, #S_SP]
+    msr     sp_el0, x23
+
+RES_EL1:
     msr     elr_el1, x21
     msr     spsr_el1, x22
     ldp     x0, x1, [sp, #16 * 0]
@@ -147,6 +168,8 @@ kernel_context_res:
     eret
     ret
 
+#endif
+
 /* Vector Table (2048 bytes) */
 .align 11
 .global vectors
@@ -165,8 +188,8 @@ vectors:
     kernel_ventry el1_error_invalid
 
     /* Lower EL using AArch64 */
-    kernel_ventry el0_sync_invalid
-    kernel_ventry el0_irq_invalid
+    kernel_ventry el0_sync
+    kernel_ventry el0_irq
     kernel_ventry el0_fiq_invalid
     kernel_ventry el0_error_invalid
 
@@ -179,12 +202,12 @@ vectors:
 
 el1_sync_invalid:
     //inv_entry 1, BAD_SYNC
-    bl kernel_context_save
+    kernel_context_save 1
     mov x0, sp
     mov x1, 0
     mrs x2, esr_el1
     bl bad_mode
-    bl kernel_context_res
+    kernel_context_res 1
 
 el1_irq_invalid:
     inv_entry 1, BAD_IRQ
@@ -196,7 +219,7 @@ el1_error_invalid:
     inv_entry 1, BAD_ERROR
 
 el0_sync_invalid:
-    inv_entry 0, BAD_SYNC
+	inv_entry 0, BAD_SYNC
 
 el0_irq_invalid:
     inv_entry 0, BAD_IRQ
@@ -209,10 +232,28 @@ el0_error_invalid:
 
 tsk     .req    x28             // current thread_info
 
+
+.align 3
+el0_sync:
+    kernel_context_save 0
+   	mrs  x25, esr_el1
+   	lsr x24, x25, #ESR_ELx_EC_SHIFT
+   	cmp x24, #ESR_ELx_EC_SVC64
+   	b.eq    el0_svc
+
+el0_svc:
+	mov x0, sp
+	bl el0_svc_handler
+	b ret_to_user
+
+el0_irq:
+    kernel_context_save 0
+    bl irq_handler
+    b ret_to_user
+
 .align 2
 el1_irq:
-    str x30, [sp, -8]!
-    bl kernel_context_save
+    kernel_context_save 1
     bl irq_handler
 
     mov tsk, sp
@@ -227,7 +268,7 @@ el1_irq:
     cbz w0, 1f
     bl el1_preempt
 1:
-    bl kernel_context_res
+    kernel_context_res 1
 
 el1_preempt:
 	mov     x24, lr
@@ -249,15 +290,31 @@ trigger_invalid_alignment:
 .align 2
 .global ret_to_user
 ret_to_user:
-	inv_entry 0, BAD_ERROR
+    disable_irq
+	//inv_entry 0, BAD_ERROR
+    mov tsk, sp
+    mov x27, #THREAD_SIZE
+    sub x27, x27, #1
+    mvn x27, x27
+    and tsk, tsk, x27
+    ldr  w24, [tsk, #NEED_RESCHED]
+    cbnz w24, need_sched
+
+no_work_pending:
+	kernel_context_res 0
+
+need_sched:
+	bl schedule
+    b no_work_pending
+
 
 .align 2
 .global ret_from_fork
 ret_from_fork:
     bl schedule_tail
-	cbz x19, 1f
-	mov x0, x20
-	blr x19
+    cbz x19, 1f
+    mov x0, x20
+    blr x19
 1:
 	b ret_to_user
 

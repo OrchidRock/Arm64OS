@@ -4,6 +4,7 @@
 
 #include "irq.h"
 #include "sched.h"
+#include "printk.h"
 
 void (*arch_irq_handler)() = NULL;
 
