@@ -12,6 +12,7 @@
 #include "memory.h"
 #include "printk.h"
 #include "sched.h"
+#include "usr/syscall.h"
 
 extern void trigger_invalid_alignment(void);
 
@@ -87,8 +88,10 @@ int kernel_thread2(void *arg)
 
 int run_user_thread(void* arg)
 {
+    unsigned long child_stack;
     //printk("%s: running at EL%d\n", __func__, read_sysreg(CurrentEL) >> 2);
     int my_local_var = 0;
+    child_stack = my_malloc();
     while (1) {
        delay(50000);
        my_local_var += 1;

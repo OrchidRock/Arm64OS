@@ -93,6 +93,7 @@ extern union task_union init_task_union;
 
 
 extern void ret_from_fork(void);
+int do_fork(unsigned long clone_flags, unsigned long fn, unsigned long arg);
 struct task_struct * switch_to(struct task_struct *prev, struct task_struct *next);
 extern struct task_struct *cpu_switch_to(struct task_struct *prev,
                      struct task_struct *next);

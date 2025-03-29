@@ -27,7 +27,7 @@ DEFINE += -DENABLE_GIC_V2
 endif
 
 ARCH += -DAARCH=64 -mcpu=cortex-a76 -mlittle-endian
-INCLUDE +=  -I $(HOME_ROOT_DIR)/include -I $(HOME_ROOT_DIR)/$(ARCH_DIR)/include -I $(HOME_ROOT_DIR)/$(ARCH_DIR)/mach-rpi
+INCLUDE += -I $(HOME_ROOT_DIR) -I $(HOME_ROOT_DIR)/include -I $(HOME_ROOT_DIR)/$(ARCH_DIR)/include -I $(HOME_ROOT_DIR)/$(ARCH_DIR)/mach-rpi
 
 ASMFLAGS += -g $(ARCH) $(DEFINE) $(INCLUDE) $(OPTIMIZE) -ffreestanding
 CFLAGS += $(ARCH) $(DEFINE) $(INCLUDE) $(OPTIMIZE)
@@ -61,13 +61,15 @@ C_FILES += $(wildcard $(HOME_ROOT_DIR)/lib/*.c)
 ASM_FILES += $(wildcard $(HOME_ROOT_DIR)/lib/*.S)
 C_FILES += $(wildcard $(HOME_ROOT_DIR)/mm/*.c)
 ASM_FILES += $(wildcard $(HOME_ROOT_DIR)/mm/*.S)
+C_FILES += $(wildcard $(HOME_ROOT_DIR)/drivers/irqchip/*.c)
+
+C_FILES += $(wildcard $(HOME_ROOT_DIR)/usr/*.c)
+ASM_FILES += $(wildcard $(HOME_ROOT_DIR)/usr/*.S)
 
 C_FILES += $(wildcard $(HOME_ROOT_DIR)/$(ARCH_DIR)/kernel/*.c)
 ASM_FILES += $(wildcard $(HOME_ROOT_DIR)/$(ARCH_DIR)/kernel/*.S)
 C_FILES += $(wildcard $(HOME_ROOT_DIR)/$(ARCH_DIR)/mach-rpi/*.c)
 ASM_FILES += $(wildcard $(HOME_ROOT_DIR)/$(ARCH_DIR)/mach-rpi/*.S)
-
-C_FILES += $(wildcard $(HOME_ROOT_DIR)/drivers/irqchip/*.c)
 
 OBJ_FILES := $(C_FILES:%.c=%_c.o)
 OBJ_FILES += $(ASM_FILES:%.S=%_s.o)

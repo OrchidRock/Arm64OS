@@ -3,6 +3,7 @@
 #include "asm/pgtable.h"
 #include "mach/base.h"
 #include "asm/mm.h"
+#include "printk.h"
 
 typedef unsigned int size_t;
 
