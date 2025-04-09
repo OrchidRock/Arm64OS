@@ -13,3 +13,9 @@ delay:
 	subs x0, x0, #1
 	bne delay
 	ret
+
+.global mmu_at_test
+mmu_at_test:
+    at s1e1r, x0
+    mrs x0, par_el1
+    ret
