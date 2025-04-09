@@ -172,7 +172,11 @@ void start_kernel(void)
     test_walk_pgtable();
 #endif
 
-	//test_mmu();
+#ifdef INIT_CACHE_INFO
+    init_cache_info();
+#endif
+
+    //test_mmu();
 
     timer_init();
     //system_timer_init();
